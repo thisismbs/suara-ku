@@ -214,3 +214,5 @@ app.post('/api/logs/sync', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server SUARA-KU berjalan pada port ${PORT}`);
 });
+
+export default app;
