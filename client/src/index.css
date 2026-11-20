@@ -1,3 +1,59 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Mencegah gesture browser yang tidak disengaja & tap delay */
+  button,
+  a,
+  input,
+  select,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Cegah seleksi teks saat jari beristirahat/menahan pada tombol & kartu AAC */
+  button,
+  [role="button"],
+  .card-touch,
+  .btn-clay {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+@layer components {
+  /* Pembantu tombol bergaya Clean Clay-lite */
+  .btn-clay {
+    @apply transition-all duration-150 ease-out rounded-2xl border border-slate-200/80 shadow-clay active:translate-y-1 active:shadow-clay-pressed select-none cursor-pointer;
+  }
+
+  /* Kartu bersih terstandarisasi */
+  .card-clean {
+    @apply bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm;
+  }
+}
+
+@keyframes dwellProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-dwell {
+  animation-name: dwellProgress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
