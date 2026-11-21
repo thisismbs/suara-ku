@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   MessageSquare,
@@ -17,28 +17,38 @@ const NAV_ITEMS = [
 ];
 
 export function Layout({ children }) {
+  // Pasang listener global event 'beforeinstallprompt'
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      window.deferredPWAInstallPrompt = e;
+      // Beritahu seluruh komponen bahwa prompt instalasi PWA siap digunakan
+      window.dispatchEvent(new Event('pwa-prompt-available'));
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
+  }, []);
+
   return (
     <div className="bg-slate-100/70 min-h-screen flex justify-center font-sans antialiased text-slate-800">
       {/* Kontainer Utama terpusat ramah tampilan HP */}
       <div className="w-full max-w-md min-h-screen relative flex flex-col justify-between bg-slate-50 border-x border-slate-200/60 shadow-xl">
         
-        {/* Header Bersih & Modern Minimalist */}
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
+        {/* Header Bersih & Ringkas (Bebas Ornamen Berlebih) */}
+        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 flex items-center">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-brand-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-              S
-            </div>
-            <div>
-              <h1 className="text-base font-bold tracking-tight text-slate-900 leading-none">
-                SUARA-KU
-              </h1>
-              <p className="text-[10px] font-semibold text-brand-600 tracking-wider uppercase mt-0.5">
-                Media AAC Adaptif
-              </p>
-            </div>
-          </div>
-          <div className="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-[10px] font-bold text-indigo-600">
-            Offline PWA
+            <img
+              src="/suaraku-logo.png"
+              alt="Logo SUARA-KU"
+              className="w-8 h-8 rounded-xl object-contain"
+            />
+            <h1 className="text-base font-bold tracking-tight text-slate-900">
+              SUARA-KU
+            </h1>
           </div>
         </header>
 

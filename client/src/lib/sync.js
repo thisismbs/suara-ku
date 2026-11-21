@@ -9,11 +9,35 @@ const getApiBaseUrl = () => {
 };
 
 /**
+ * Memeriksa apakah kesalahan disebabkan oleh kondisi offline / jaringan terputus
+ */
+function isNetworkOfflineError(err) {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return true;
+  }
+  const msg = (err?.message || '').toLowerCase();
+  return (
+    msg.includes('failed to fetch') ||
+    msg.includes('networkerror') ||
+    msg.includes('network request failed') ||
+    msg.includes('abort') ||
+    err?.name === 'TypeError'
+  );
+}
+
+const OFFLINE_MESSAGE =
+  'Perangkat sedang offline. Sambungkan ke internet untuk melakukan sinkronisasi.';
+
+/**
  * Mengirim data log kalimat lokal berstatus 'pending' ke backend server PostgreSQL
  * @returns {Promise<{ success: boolean, count: number, error?: string }>}
  */
 export async function syncLogsToServer() {
   try {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return { success: false, count: 0, error: OFFLINE_MESSAGE };
+    }
+
     const pendingLogs = await db.logs.where('syncStatus').equals('pending').toArray();
 
     if (!pendingLogs || pendingLogs.length === 0) {
@@ -50,7 +74,10 @@ export async function syncLogsToServer() {
     return { success: true, count: pendingLogs.length };
   } catch (err) {
     console.warn('Gagal menyinkronkan log ke server:', err.message);
-    return { success: false, count: 0, error: err.message };
+    const errorText = isNetworkOfflineError(err)
+      ? OFFLINE_MESSAGE
+      : 'Gagal menghubungi server database.';
+    return { success: false, count: 0, error: errorText };
   }
 }
 
@@ -60,6 +87,10 @@ export async function syncLogsToServer() {
  */
 export async function syncOutboxToServer() {
   try {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return { success: false, count: 0, error: OFFLINE_MESSAGE };
+    }
+
     const outboxItems = await db.outbox.toArray();
 
     if (!outboxItems || outboxItems.length === 0) {
@@ -121,7 +152,10 @@ export async function syncOutboxToServer() {
     return { success: true, count: processedCount };
   } catch (err) {
     console.warn('Gagal sinkronisasi outbox:', err.message);
-    return { success: false, count: 0, error: err.message };
+    const errorText = isNetworkOfflineError(err)
+      ? OFFLINE_MESSAGE
+      : 'Gagal menghubungi server database.';
+    return { success: false, count: 0, error: errorText };
   }
 }
 
@@ -130,6 +164,15 @@ export async function syncOutboxToServer() {
  * @returns {Promise<{ success: boolean, logsCount: number, outboxCount: number, message: string }>}
  */
 export async function triggerFullSync() {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return {
+      success: false,
+      logsCount: 0,
+      outboxCount: 0,
+      message: OFFLINE_MESSAGE
+    };
+  }
+
   const logsResult = await syncLogsToServer();
   const outboxResult = await syncOutboxToServer();
 
@@ -142,7 +185,10 @@ export async function triggerFullSync() {
       ? `Sinkronisasi berhasil (${logsResult.count} log, ${outboxResult.count} mutasi kosakata).`
       : 'Semua data lokal telah tersinkron.';
   } else {
-    message = `Sinkronisasi tertunda: ${logsResult.error || outboxResult.error || 'Server offline'}`;
+    const errText = logsResult.error || outboxResult.error || '';
+    message = isNetworkOfflineError({ message: errText })
+      ? OFFLINE_MESSAGE
+      : errText || 'Sinkronisasi tertunda karena kendala jaringan.';
   }
 
   return {

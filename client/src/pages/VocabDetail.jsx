@@ -6,10 +6,6 @@ import {
   Volume2,
   Save,
   Trash2,
-  Sparkles,
-  Tag,
-  Clock,
-  AlertTriangle,
   Check
 } from 'lucide-react';
 import { db } from '../db';
@@ -199,12 +195,11 @@ function VocabDetailContent({ item, id }) {
       {/* 2. Formulir Ubah Kata */}
       <form onSubmit={handleSave} className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-4 text-xs">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-          <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-indigo-600" />
+          <h3 className="font-bold text-slate-800 text-sm">
             Ubah Informasi Kosakata
           </h3>
-          <span className="text-[10px] font-semibold text-slate-400">
-            {isDefaultItem ? 'Simbol Bawaan' : 'Simbol Kustom'}
+          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
+            {isDefaultItem ? 'Bawaan' : 'Kustom'}
           </span>
         </div>
 
@@ -271,74 +266,53 @@ function VocabDetailContent({ item, id }) {
           <Save className="w-4 h-4" />
           <span>{isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
         </button>
+
+        {/* Tombol Hapus Kosakata Bersih (Tanpa Kartu Zona Bahaya) */}
+        <div className="pt-2 border-t border-slate-100">
+          {!confirmDelete ? (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Hapus Kosakata</span>
+            </button>
+          ) : (
+            <div className="p-3 bg-rose-50/70 border border-rose-200 rounded-xl space-y-2 text-center">
+              <p className="text-xs font-semibold text-rose-800">
+                Hapus kosakata "{item.label}"?
+              </p>
+              <div className="flex items-center justify-center gap-2 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 font-semibold text-xs rounded-lg cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg shadow-xs cursor-pointer"
+                >
+                  Ya, Hapus
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </form>
 
-      {/* 3. Aksi Hapus Kosakata */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3">
-        <h4 className="text-xs font-bold text-slate-700">Zona Bahaya</h4>
-        
-        {isDefaultItem && (
-          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2.5 flex items-start gap-1.5 leading-relaxed">
-            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>
-              Ini adalah simbol kosakata bawaan sistem. Menghapus simbol ini dapat memengaruhi komunikasi standar anak.
-            </span>
-          </p>
-        )}
-
-        {!confirmDelete ? (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className="btn-clay w-full py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs rounded-xl shadow-clay flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <Trash2 className="w-4 h-4 stroke-[2.2]" />
-            <span>Hapus Kosakata Ini</span>
-          </button>
-        ) : (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl space-y-2 text-center">
-            <p className="text-xs font-bold text-rose-800">
-              Apakah Anda yakin ingin menghapus "{item.label}"?
-            </p>
-            <div className="flex items-center justify-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setConfirmDelete(false)}
-                className="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
-              >
-                Ya, Hapus
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Meta Informasi Simbol */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm text-[11px] text-slate-500 space-y-1.5">
-        <div className="flex justify-between">
-          <span className="flex items-center gap-1">
-            <Tag className="w-3.5 h-3.5 text-slate-400" /> ID Simbol
+      {/* Meta Informasi Simbol (Tanpa UUID) */}
+      {item.createdAt && (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-sm text-xs text-slate-500 flex justify-between items-center">
+          <span className="font-medium text-slate-500">Ditambahkan pada</span>
+          <span className="font-semibold text-slate-700">
+            {new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
           </span>
-          <span className="font-mono font-medium text-slate-700">{item.id}</span>
         </div>
-        {item.createdAt && (
-          <div className="flex justify-between">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" /> Tanggal Dibuat
-            </span>
-            <span className="font-medium text-slate-700">
-              {new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })}
-            </span>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

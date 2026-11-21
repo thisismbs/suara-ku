@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { BookOpen, ChevronRight, Plus, Search, X, Sparkles } from 'lucide-react';
+import { ChevronRight, Plus, Search, X } from 'lucide-react';
 import { db } from '../db';
 import VocabIcon from '../components/VocabIcon';
 import AddVocabModal from '../components/AddVocabModal';
@@ -69,8 +69,8 @@ function VocabListItem({ item }) {
       {/* Sisi Kanan: Badge Kustom & Chevron */}
       <div className="flex items-center gap-2 shrink-0 ml-2">
         {item.isCustom === 1 && (
-          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-            <Sparkles className="w-2.5 h-2.5" /> Kustom
+          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
+            Kustom
           </span>
         )}
         <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition-colors">
@@ -104,10 +104,7 @@ export default function VocabList() {
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <h2 className="text-base font-bold text-slate-800 tracking-tight flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                <BookOpen className="w-4 h-4" />
-              </span>
+            <h2 className="text-base font-bold text-slate-800 tracking-tight">
               Manajemen Kosakata
             </h2>
             <p className="text-xs text-slate-500 font-medium">

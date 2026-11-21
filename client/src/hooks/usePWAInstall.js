@@ -33,6 +33,10 @@ export function usePWAInstall() {
       setDeferredPrompt(e);
     };
 
+    const handlePromptAvailable = () => {
+      setDeferredPrompt(window.deferredPWAInstallPrompt || null);
+    };
+
     const handleAppInstalled = () => {
       window.deferredPWAInstallPrompt = null;
       setDeferredPrompt(null);
@@ -40,10 +44,12 @@ export function usePWAInstall() {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
