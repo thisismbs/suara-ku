@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'symbols/*.{png,svg}', 'audio/*.mp3'],
+      includeAssets: ['favicon.ico', 'suaraku-logo.png', 'foto-mavin.jpg'],
       manifest: {
         name: 'SUARA-KU AAC PWA',
         short_name: 'SUARA-KU',
@@ -34,7 +34,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg}']
       }
     })
   ]
