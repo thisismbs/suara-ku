@@ -1,4 +1,4 @@
-// Helper Mesin Suara (Text-to-Speech) Bahasa Indonesia
+ // Helper Mesin Suara (Text-to-Speech) Bahasa Indonesia
 
 let cachedVoices = [];
 
