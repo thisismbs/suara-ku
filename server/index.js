@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pg from 'pg';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -187,8 +188,10 @@ app.post('/api/logs', async (req, res) => {
       return res.status(400).json({ error: 'sentence atau text wajib diisi' });
     }
 
-    const logId = id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `log-${Date.now()}`);
-    const timeValue = timestamp || created_at || new Date().toISOString();
+    const logId = id || crypto.randomUUID();
+    const logTimestamp = timestamp
+      ? new Date(Number(timestamp) || timestamp).toISOString()
+      : (created_at ? new Date(Number(created_at) || created_at).toISOString() : new Date().toISOString());
 
     const wordsValue = typeof words === 'object' && words !== null
       ? JSON.stringify(words)
@@ -220,7 +223,7 @@ app.post('/api/logs', async (req, res) => {
       sentenceValue,
       sentenceValue,
       wordsValue,
-      timeValue,
+      logTimestamp,
       notes ?? null
     ];
 
