@@ -5,6 +5,7 @@ import { ChevronRight, Plus, Search, X } from 'lucide-react';
 import { db } from '../db';
 import VocabIcon from '../components/VocabIcon';
 import AddVocabModal from '../components/AddVocabModal';
+import useCategories from '../hooks/useCategories';
 
 const CATEGORY_STYLES = {
   kebutuhan: { bg: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-200' },
@@ -15,8 +16,6 @@ const CATEGORY_STYLES = {
   subjek: { bg: 'bg-indigo-50', text: 'text-indigo-800', border: 'border-indigo-200' },
   default: { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' }
 };
-
-const CATEGORIES = ['Semua', 'Kebutuhan', 'Aksi', 'Emosi', 'Sosial', 'Respon'];
 
 // Komponen baris item dengan penanganan fallback gambar individual
 function VocabListItem({ item }) {
@@ -82,6 +81,7 @@ function VocabListItem({ item }) {
 }
 
 export default function VocabList() {
+  const { allCategories } = useCategories();
   const vocabularies = useLiveQuery(() => db.vocabularies.toArray(), []) || [];
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
@@ -89,7 +89,7 @@ export default function VocabList() {
 
   // Filter kosakata berdasarkan pencarian teks dan chip kategori
   const filteredVocabs = vocabularies.filter((item) => {
-    const matchesSearch = (item.label || '')
+    const matchesSearch = (item.label || item.text || '')
       .toLowerCase()
       .includes(searchQuery.trim().toLowerCase());
     const matchesCat =
@@ -146,7 +146,7 @@ export default function VocabList() {
 
       {/* Chip Filter Kategori */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none">
-        {CATEGORIES.map((cat) => {
+        {allCategories.map((cat) => {
           const isActive = selectedCategory === cat;
           return (
             <button

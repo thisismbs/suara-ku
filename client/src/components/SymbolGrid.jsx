@@ -3,23 +3,14 @@ import { Plus, Pencil, Trash2, Volume2 } from 'lucide-react';
 import useSettings from '../hooks/useSettings';
 import SymbolCard from './SymbolCard';
 
-const CATEGORIES = [
-  'Semua',
-  'Kebutuhan',
-  'Aksi',
-  'Emosi',
-  'Sosial',
-  'Respon',
-  'Di Rumah',
-  'Di Sekolah'
-];
-
-const SITUATIONAL_CATEGORIES = ['Di Rumah', 'Di Sekolah'];
-
 export function SymbolGrid({
   vocabularies = [],
+  categories = [],
   activeCategory = 'Semua',
+  isSituational = false,
+  isSituationalCategory,
   onCategoryChange,
+  onAddCategory,
   onSelectWord,
   onSpeakPhrase,
   onAddPhrase,
@@ -28,14 +19,8 @@ export function SymbolGrid({
 }) {
   const { settings } = useSettings();
 
-  const isSituational = SITUATIONAL_CATEGORIES.includes(activeCategory);
-
   const filteredItems = activeCategory === 'Semua'
-    ? vocabularies.filter(
-        (v) => !SITUATIONAL_CATEGORIES.some(
-          (cat) => cat.toLowerCase() === (v.category || '').toLowerCase()
-        )
-      )
+    ? vocabularies.filter((v) => !isSituationalCategory?.(v.category))
     : vocabularies.filter(
         (v) => (v.category || '').toLowerCase() === activeCategory.toLowerCase()
       );
@@ -47,9 +32,9 @@ export function SymbolGrid({
 
   return (
     <div className="space-y-3">
-      {/* Tab Bar Filter Kategori Horizontal */}
+      {/* Tab Bar Filter Kategori Horizontal + Tombol "+ Kategori" */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar select-none">
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive = activeCategory === cat;
           return (
             <button
@@ -66,9 +51,19 @@ export function SymbolGrid({
             </button>
           );
         })}
+
+        {/* Tombol kecil "+ Kategori" di ujung kanan baris chip */}
+        <button
+          type="button"
+          onClick={onAddCategory}
+          className="px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide whitespace-nowrap cursor-pointer bg-white text-indigo-600 border border-dashed border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 transition-all duration-150 flex items-center gap-1 shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Kategori</span>
+        </button>
       </div>
 
-      {/* Mode Khusus Kategori Situasional ("Di Rumah" & "Di Sekolah") */}
+      {/* Mode Khusus Kategori Situasional & Kategori Kustom */}
       {isSituational ? (
         <div className="space-y-2.5">
           {/* Baris Aksi Tambah Kalimat */}
@@ -86,7 +81,7 @@ export function SymbolGrid({
             </button>
           </div>
 
-          {/* Daftar Kartu Kalimat Situasional */}
+          {/* Daftar Kartu Kalimat Situasional / Kustom */}
           {filteredItems.length === 0 ? (
             <div className="py-8 px-4 text-center space-y-2 bg-white rounded-2xl border border-dashed border-slate-200">
               <p className="text-xs font-semibold text-slate-600">

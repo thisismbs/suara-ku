@@ -3,18 +3,13 @@ import { X, Plus, Sparkles, Check, Camera, Trash2 } from 'lucide-react';
 import { db } from '../db';
 import VocabIcon from './VocabIcon';
 import { AVAILABLE_VOCAB_ICONS } from '../constants/icons';
-
-const CATEGORIES = [
-  { id: 'kebutuhan', label: 'Kebutuhan', color: 'bg-amber-50 text-amber-800 border-amber-200' },
-  { id: 'aksi', label: 'Aksi', color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-  { id: 'emosi', label: 'Emosi', color: 'bg-pink-50 text-pink-800 border-pink-200' },
-  { id: 'sosial', label: 'Sosial', color: 'bg-blue-50 text-blue-800 border-blue-200' },
-  { id: 'respon', label: 'Respon', color: 'bg-purple-50 text-purple-800 border-purple-200' }
-];
+import useCategories from '../hooks/useCategories';
 
 export function AddVocabModal({ isOpen, onClose }) {
+  const { selectableCategories, isSituationalCategory } = useCategories();
+
   const [label, setLabel] = useState('');
-  const [category, setCategory] = useState('kebutuhan');
+  const [category, setCategory] = useState(() => selectableCategories[0] || 'Kebutuhan');
   const [iconName, setIconName] = useState('Heart');
   const [customImage, setCustomImage] = useState(null);
   const [note, setNote] = useState('');
@@ -25,6 +20,9 @@ export function AddVocabModal({ isOpen, onClose }) {
   const fileInputRef = useRef(null);
 
   if (!isOpen) return null;
+
+  const isSituationalSelected = isSituationalCategory(category);
+  const maxLabelLength = isSituationalSelected ? 160 : 30;
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -61,7 +59,7 @@ export function AddVocabModal({ isOpen, onClose }) {
 
   const handleClose = () => {
     setLabel('');
-    setCategory('kebutuhan');
+    setCategory(selectableCategories[0] || 'Kebutuhan');
     setIconName('Heart');
     setCustomImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -80,8 +78,8 @@ export function AddVocabModal({ isOpen, onClose }) {
       return;
     }
 
-    if (trimmedLabel.length > 30) {
-      setErrorMsg('Label kata maksimal 30 karakter.');
+    if (trimmedLabel.length > maxLabelLength) {
+      setErrorMsg(`Label maksimal ${maxLabelLength} karakter.`);
       return;
     }
 
@@ -93,10 +91,16 @@ export function AddVocabModal({ isOpen, onClose }) {
         ? crypto.randomUUID()
         : `vocab-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
+      // Simpan kategori bawaan umum dalam huruf kecil untuk konsistensi, atau persis sesuai nama untuk situasional/kustom
+      const storedCategory = isSituationalSelected
+        ? category
+        : category.toLowerCase();
+
       const newVocab = {
         id: vocabId,
         label: trimmedLabel,
-        category,
+        text: trimmedLabel,
+        category: storedCategory,
         iconName: iconName || 'HelpCircle',
         symbolPath: customImage || null,
         note: note.trim() || '',
@@ -147,7 +151,7 @@ export function AddVocabModal({ isOpen, onClose }) {
             </span>
             <div>
               <h3 className="font-bold text-slate-800 text-sm">Tambah Kosakata</h3>
-              <p className="text-[11px] text-slate-400">Buat simbol kata kustom baru</p>
+              <p className="text-[11px] text-slate-400">Buat simbol kata atau frasa kustom baru</p>
             </div>
           </div>
           <button
@@ -174,50 +178,49 @@ export function AddVocabModal({ isOpen, onClose }) {
 
         {/* Formulir */}
         <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
-          {/* Input Label Kata */}
+          {/* Input Label Kata / Kalimat */}
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <label className="font-bold text-slate-700">
-                Label Kata <span className="text-rose-500">*</span>
+                {isSituationalSelected ? 'Isi Kalimat / Frasa' : 'Label Kata'}{' '}
+                <span className="text-rose-500">*</span>
               </label>
               <span className="text-[10px] text-slate-400 font-mono">
-                {label.length}/30
+                {label.length}/{maxLabelLength}
               </span>
             </div>
             <input
               type="text"
               required
-              maxLength={30}
-              placeholder="Contoh: Mainan Favorit, Mama, Jus..."
+              maxLength={maxLabelLength}
+              placeholder={
+                isSituationalSelected
+                  ? 'Contoh: Ma, saya mau minum air hangat'
+                  : 'Contoh: Mainan Favorit, Mama, Jus...'
+              }
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 font-medium focus:outline-hidden focus:border-indigo-500 focus:bg-white transition-colors"
             />
           </div>
 
-          {/* Kategori Kata */}
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700">Kategori AAC</label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {CATEGORIES.map((cat) => {
-                const isSelected = category === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setCategory(cat.id)}
-                    className={`px-3 py-2 rounded-xl text-left font-semibold text-[11px] border transition-all cursor-pointer flex items-center justify-between ${
-                      isSelected
-                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                        : `${cat.color} hover:brightness-95`
-                    }`}
-                  >
-                    <span>{cat.label}</span>
-                    {isSelected && <Check className="w-3.5 h-3.5" />}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Dropdown Kategori Dinamis (tersinkron dengan localStorage, tanpa "Semua") */}
+          <div className="space-y-1">
+            <label htmlFor="add-vocab-category" className="font-bold text-slate-700 block">
+              Kategori AAC
+            </label>
+            <select
+              id="add-vocab-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-hidden focus:border-indigo-500 focus:bg-white transition-colors cursor-pointer"
+            >
+              {selectableCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Input Foto Kustom (Kamera / Galeri) */}

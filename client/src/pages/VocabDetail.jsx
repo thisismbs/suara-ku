@@ -11,16 +11,8 @@ import {
 import { db } from '../db';
 import { speakSentence } from '../lib/tts';
 import useSettings from '../hooks/useSettings';
+import useCategories from '../hooks/useCategories';
 import VocabIcon from '../components/VocabIcon';
-
-const CATEGORIES = [
-  { id: 'kebutuhan', label: 'Kebutuhan' },
-  { id: 'aksi', label: 'Aksi' },
-  { id: 'emosi', label: 'Emosi' },
-  { id: 'sosial', label: 'Sosial' },
-  { id: 'respon', label: 'Respon' },
-  { id: 'subjek', label: 'Subjek' },
-];
 
 const AAC_PREVIEW_STYLES = {
   kebutuhan: 'border-amber-300 bg-amber-50/70 text-amber-900',
@@ -35,11 +27,20 @@ const AAC_PREVIEW_STYLES = {
 function VocabDetailContent({ item, id }) {
   const navigate = useNavigate();
   const { settings } = useSettings();
+  const { selectableCategories, isSituationalCategory } = useCategories();
   const speechRate = settings?.speechRate ?? 0.9;
 
+  // Bangun daftar opsi kategori dinamis (termasuk kategori lama item jika belum ada di daftar)
+  const matchedOption = selectableCategories.find(
+    (cat) => cat.toLowerCase() === (item.category || '').toLowerCase()
+  );
+  const categoryOptions = matchedOption || !item.category
+    ? selectableCategories
+    : [...selectableCategories, item.category];
+
   // State form terinisialisasi langsung dari data item
-  const [editLabel, setEditLabel] = useState(item.label || '');
-  const [editCategory, setEditCategory] = useState(item.category || 'kebutuhan');
+  const [editLabel, setEditLabel] = useState(item.label || item.text || '');
+  const [editCategory, setEditCategory] = useState(matchedOption || item.category || 'Kebutuhan');
   const [editNote, setEditNote] = useState(item.note || '');
   const [imgError, setImgError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -70,11 +71,15 @@ function VocabDetailContent({ item, id }) {
     setIsSaving(true);
     try {
       const now = new Date().toISOString();
+      const storedCategory = isSituationalCategory(editCategory)
+        ? editCategory
+        : editCategory.toLowerCase();
 
       // 1. Perbarui tabel vocabularies
       await db.vocabularies.update(id, {
         label: trimmedLabel,
-        category: editCategory,
+        text: trimmedLabel,
+        category: storedCategory,
         note: editNote.trim(),
         updatedAt: now
       });
@@ -91,7 +96,7 @@ function VocabDetailContent({ item, id }) {
         payload: {
           id,
           label: trimmedLabel,
-          category: editCategory,
+          category: storedCategory,
           note: editNote.trim()
         },
         timestamp: now
@@ -236,9 +241,9 @@ function VocabDetailContent({ item, id }) {
             onChange={(e) => setEditCategory(e.target.value)}
             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-medium focus:outline-hidden focus:border-indigo-500 focus:bg-white transition-colors cursor-pointer"
           >
-            {CATEGORIES.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.label}
+            {categoryOptions.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
               </option>
             ))}
           </select>
